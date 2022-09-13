@@ -48,7 +48,7 @@ public class SpringToSPF {
             ApplicationInformation applicationInformation = modifySources(sourceRoot);
             sourceRoot.saveAll(outputPath);
 
-            buildModifiedSources("build.xml");
+            buildModifiedSources("buildModifiedSources.xml");
 
             List<String> testcases = new ArrayList<>();
             List<MethodDeclaration> l = Collections.singletonList(applicationInformation.getServiceClassMethods().get(1));
