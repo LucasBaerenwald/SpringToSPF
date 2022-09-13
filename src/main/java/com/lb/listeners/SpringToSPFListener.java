@@ -3,48 +3,19 @@ package com.lb.listeners;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.PropertyListenerAdapter;
-import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.vm.ChoiceGenerator;
-import gov.nasa.jpf.vm.ClassInfo;
-import gov.nasa.jpf.vm.Instruction;
-import gov.nasa.jpf.vm.LocalVarInfo;
-import gov.nasa.jpf.vm.MethodInfo;
-import gov.nasa.jpf.vm.StackFrame;
-import gov.nasa.jpf.vm.ThreadInfo;
-import gov.nasa.jpf.vm.Types;
-import gov.nasa.jpf.vm.VM;
-
-import gov.nasa.jpf.jvm.bytecode.ARETURN;
-import gov.nasa.jpf.jvm.bytecode.DRETURN;
-import gov.nasa.jpf.jvm.bytecode.FRETURN;
-import gov.nasa.jpf.jvm.bytecode.IRETURN;
-import gov.nasa.jpf.jvm.bytecode.JVMInvokeInstruction;
-import gov.nasa.jpf.jvm.bytecode.LRETURN;
-import gov.nasa.jpf.jvm.bytecode.JVMReturnInstruction;
+import gov.nasa.jpf.jvm.bytecode.*;
 import gov.nasa.jpf.report.ConsolePublisher;
 import gov.nasa.jpf.report.Publisher;
 import gov.nasa.jpf.report.PublisherExtension;
 import gov.nasa.jpf.search.Search;
+import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
 import gov.nasa.jpf.symbc.bytecode.BytecodeUtils;
 import gov.nasa.jpf.symbc.bytecode.INVOKESTATIC;
 import gov.nasa.jpf.symbc.concolic.PCAnalyzer;
-
-import gov.nasa.jpf.symbc.numeric.Expression;
-import gov.nasa.jpf.symbc.numeric.IntegerConstant;
-import gov.nasa.jpf.symbc.numeric.IntegerExpression;
-import gov.nasa.jpf.symbc.numeric.PCChoiceGenerator;
-import gov.nasa.jpf.symbc.numeric.PathCondition;
-import gov.nasa.jpf.symbc.numeric.RealConstant;
-import gov.nasa.jpf.symbc.numeric.RealExpression;
-import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-
-import gov.nasa.jpf.symbc.numeric.SymbolicConstraintsGeneral;
-// import gov.nasa.jpf.symbc.numeric.SymbolicInteger;
-
+import gov.nasa.jpf.symbc.numeric.*;
 import gov.nasa.jpf.util.Pair;
+import gov.nasa.jpf.vm.*;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.regex.Matcher;

@@ -23,10 +23,13 @@ import org.apache.tools.ant.ProjectHelper;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
 public class SpringToSPF {
 
@@ -34,6 +37,10 @@ public class SpringToSPF {
     private static final Path outputPath = Path.of("output_src");
 
     public static void main(String[] args) {
+
+        if (!createAndValidateDirectories(inputPath, outputPath)) {
+            return;
+        }
 
         try {
             // parse sources
@@ -125,6 +132,29 @@ public class SpringToSPF {
 //            writer.println("symbolic.debug=true");
 //
 //        }
+    }
+
+    public static boolean createAndValidateDirectories(Path inputPath, Path outputPath) {
+        try {
+            if (!Files.exists(inputPath)) {
+                Files.createDirectory(inputPath);
+            }
+            if (!Files.exists(outputPath)) {
+                Files.createDirectory(outputPath);
+            }
+
+            try (Stream<Path> entries = Files.list(inputPath)) {
+                if (!entries.findFirst().isPresent()) {
+                    System.out.println("input_src directory mustn't be empty");
+                    return false;
+                }
+            }
+
+            return true;
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
     }
 
     public static ApplicationInformation modifySources(SourceRoot sourceRoot) {
@@ -223,7 +253,7 @@ public class SpringToSPF {
             };
             Config conf = JPF.createConfig(options);
 
-            //conf.printEntries();
+            conf.printEntries();
 
             JPF jpf = new JPF(conf);
             new SymbolicInstructionFactory(conf);
