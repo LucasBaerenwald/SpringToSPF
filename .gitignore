@@ -38,7 +38,7 @@ build/
 ### Mac OS ###
 .DS_Store
 
-input_src/*
-output_src/*
+input_src/
+output_src/
 
 output_build/
