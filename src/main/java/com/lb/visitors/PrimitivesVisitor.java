@@ -11,9 +11,13 @@ public class PrimitivesVisitor extends ModifierVisitor<Void> {
 
         // change non-primitive Types to their primitive equivalent
         switch (n.getNameAsString()) {
+            case "Byte" -> n.setName("byte");
+            case "Short" -> n.setName("short");
             case "Integer" -> n.setName("int");
             case "Long" -> n.setName("long");
-            // TODO: BigDecimal
+            case "Float" -> n.setName("float");
+            case "Double" -> n.setName("double");
+            // TODO: Weitere Numeric-Datentypen integrieren
         }
 
         return n;

@@ -144,7 +144,7 @@ public class SpringToSPF {
             }
 
             try (Stream<Path> entries = Files.list(inputPath)) {
-                if (!entries.findFirst().isPresent()) {
+                if (entries.findFirst().isEmpty()) {
                     System.out.println("input_src directory mustn't be empty");
                     return false;
                 }
@@ -242,10 +242,16 @@ public class SpringToSPF {
                     , "+symbolic.string_dp=z3str"
                     , "+symbolic.string_dp_timeout_ms=3000"
 
-                    , "+symbolic.min_int=-100"
-                    , "+symbolic.max_int=100"
-                    , "+symbolic.min_long=-100"
-                    , "+symbolic.max_long=100"
+                    , "+symbolic.min_byte=-10"
+                    , "+symbolic.max_byte=10"
+                    , "+symbolic.min_short=-10"
+                    , "+symbolic.max_short=10"
+                    , "+symbolic.min_int=-10"
+                    , "+symbolic.max_int=10"
+                    , "+symbolic.min_long=-10"
+                    , "+symbolic.max_long=10"
+                    , "+symbolic.min_double=-10.0"
+                    , "+symbolic.max_double=10.0"
 
                     //,"+symbolic.debug=true"
 
