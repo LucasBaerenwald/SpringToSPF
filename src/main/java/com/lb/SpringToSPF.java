@@ -9,14 +9,15 @@ import com.github.javaparser.symbolsolver.JavaSymbolSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ReflectionTypeSolver;
 import com.github.javaparser.utils.SourceRoot;
+import com.lb.listeners.SpringToSPFPrimitivesListener;
 import com.lb.util.ApplicationInformation;
+import com.lb.util.TestFileBuilder;
 import com.lb.visitors.*;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.JPFConfigException;
 import gov.nasa.jpf.JPFException;
 import gov.nasa.jpf.symbc.SymbolicInstructionFactory;
-import gov.nasa.jpf.symbc.heap.HeapSymbolicListener;
 import org.apache.tools.ant.DefaultLogger;
 import org.apache.tools.ant.Project;
 import org.apache.tools.ant.ProjectHelper;
@@ -25,14 +26,10 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Function;
+import java.util.*;
 import java.util.stream.Stream;
 
 public class SpringToSPF {
-
     private static final Path inputPath = Path.of("input_src");
     private static final Path outputPath = Path.of("output_src");
 
@@ -57,11 +54,10 @@ public class SpringToSPF {
 
             buildModifiedSources("buildModifiedSources.xml");
 
-            List<String> testcases = new ArrayList<>();
-            List<MethodDeclaration> l = Collections.singletonList(applicationInformation.getServiceClassMethods().get(1));
+            var allTestcases = new HashMap<String, Set<Vector>>();
 
             // analyse each method of modified sources service class
-            for (MethodDeclaration md : l) {//applicationInformation.getServiceClassMethods()) {
+            for (MethodDeclaration md : applicationInformation.getServiceClassMethods()) {
                 // build method-call-string
                 StringBuilder symbolicMethodCall =
                         new StringBuilder(applicationInformation.getServiceClassPackage() + "." + md.getNameAsString() + "(");
@@ -71,67 +67,18 @@ public class SpringToSPF {
                 }
                 symbolicMethodCall.append(")");
 
-                testcases.add(
-                        analyseMethod(
-                                applicationInformation.getApplicationName(),
-                                symbolicMethodCall.toString()));
+                analyseMethod(
+                        applicationInformation.getApplicationName(),
+                        symbolicMethodCall.toString(),
+                        allTestcases);
             }
 
-            for (String s : testcases) {
-                System.out.println(s);
-            }
+            TestFileBuilder.buildTestFile(allTestcases);
+
         } catch (IOException e) {
             System.out.println("Input sourcecode couldn't be parsed");
             e.printStackTrace();
         }
-
-//        StringBuilder symbolicMethods = new StringBuilder();
-//
-//        for (MethodDeclaration md : applicationInformation.getServiceClassMethods()) {
-//            StringBuilder symbolicMethodCall = new StringBuilder(applicationInformation.getServiceClassPackage() + "." + md.getNameAsString() + "(");
-//
-//            for (int i = 0; i < md.getParameters().size(); i++) {
-//                symbolicMethodCall.append("sym#");
-//            }
-//
-//            if (md.getParameters().size() > 0) {
-//                symbolicMethodCall.deleteCharAt(symbolicMethodCall.length()-1);
-//            }
-//
-//            symbolicMethodCall.append(")/\n\t,");
-//            symbolicMethods.append(symbolicMethodCall);
-//        }
-//
-//        if (applicationInformation.getServiceClassMethods().size() > 0 ) {
-//            symbolicMethods.delete(symbolicMethods.length()-4, symbolicMethods.length());
-//        }
-//
-//        try (PrintWriter writer = new PrintWriter("Analysis.jpf")) {
-//            writer.println("@using=jpf-symbc");
-//
-//            writer.println("classpath=./output_build/");
-//            writer.println("sourcepath=./output_src/");
-//
-//            writer.println("target=" + analysisTarget);
-//            writer.println("listener=" + listener);
-//
-//            writer.println("search.multiple_errors=true");
-//            writer.println("search.depth_limit = 10");
-//
-//            writer.println("symbolic.method=" + symbolicMethods);
-//            writer.println("symbolic.min_int=-100");
-//            writer.println("symbolic.max_int=100");
-//            writer.println("symbolic.min_long=-100");
-//            writer.println("symbolic.max_long=100");
-//
-//            writer.println("symbolic.lazy=on");
-//            writer.println("symbolic.strings=true");
-//            writer.println("symbolic.string_dp=ABC");
-//            writer.println("symbolic.string_dp_timeout_ms=3000");
-//            writer.println("symbolic.arrays=true");
-//            writer.println("symbolic.debug=true");
-//
-//        }
     }
 
     public static boolean createAndValidateDirectories(Path inputPath, Path outputPath) {
@@ -225,7 +172,7 @@ public class SpringToSPF {
         modifiedProject.executeTarget(modifiedProject.getDefaultTarget());
     }
 
-    public static String analyseMethod(String analysisTarget, String symbolicMethodCall) {
+    public static void analyseMethod(String analysisTarget, String symbolicMethodCall, HashMap<String, Set<Vector>> allTestCases) {
         try {
             String[] options = {
                     "+@using=jpf-symbc"
@@ -259,17 +206,22 @@ public class SpringToSPF {
             };
             Config conf = JPF.createConfig(options);
 
-            conf.printEntries();
+            //conf.printEntries();
 
             JPF jpf = new JPF(conf);
             new SymbolicInstructionFactory(conf);
-            //SpringToSPFListener listener = new SpringToSPFListener(conf, jpf);
-            HeapSymbolicListener listener = new HeapSymbolicListener(conf, jpf);
-            jpf.addListener(listener);
+
+            var sequenceListener = new SpringToSPFPrimitivesListener(conf, jpf);
+            jpf.addListener(sequenceListener);
 
             jpf.run();
 
-            return "";//listener.getCurrentTestCases();
+            if (!allTestCases.containsKey(sequenceListener.getClassName())) {
+                allTestCases.put(sequenceListener.getClassName(), new LinkedHashSet<>());
+            }
+
+            allTestCases.get(sequenceListener.getClassName()).addAll(sequenceListener.getMethodSequences());
+
         } catch (JPFConfigException cx) {
             System.out.println("Config Exception: ");
             cx.printStackTrace();
@@ -279,7 +231,5 @@ public class SpringToSPF {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return "No testcases for " + symbolicMethodCall;
     }
 }

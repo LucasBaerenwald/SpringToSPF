@@ -8,8 +8,7 @@
         <mkdir dir="output_build"/>
         <javac debug="true"
             srcdir="output_src"
-            destdir="output_build"
-            classpath="C:\dev\SymbolicExecution\jpf\jpf-core\build\jpf.jar" />
+            destdir="output_build" />
     </target>
 
     <target name="main" depends="clean,compile"/>
