@@ -73,7 +73,7 @@ public class SpringToSPF {
                         allTestcases);
             }
 
-            TestFileBuilder.buildTestFile(allTestcases);
+            TestFileBuilder.buildTestFile(allTestcases, applicationInformation);
 
         } catch (IOException e) {
             System.out.println("Input sourcecode couldn't be parsed");

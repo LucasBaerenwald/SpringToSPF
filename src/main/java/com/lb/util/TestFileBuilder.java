@@ -6,7 +6,7 @@ import java.util.*;
 
 public class TestFileBuilder {
 
-    public static void buildTestFile(HashMap<String, Set<Vector>> allTestCases) {
+    public static void buildTestFile(HashMap<String, Set<Vector>> allTestCases, ApplicationInformation applicationInformation) {
 
         allTestCases.forEach((className, testCases) -> {
 
@@ -15,22 +15,32 @@ public class TestFileBuilder {
             }
 
             try {
-                FileWriter fw = new FileWriter(className + "Test.java");
+                String cn = className.substring(className.lastIndexOf('.') + 1);
+                FileWriter fw = new FileWriter(cn + "Test.java");
 
-                fw.write("import static org.junit.Assert.*;\n");
+                String appName = applicationInformation.getApplicationName();
+                String servicePackage = applicationInformation.getServiceClassPackage();
+
+                fw.write("package " + servicePackage.substring(0, servicePackage.lastIndexOf('.')) + ";\n");
+                fw.write("\n");
+                fw.write("import " + appName + ";\n");
                 fw.write("import org.junit.Before;\n");
                 fw.write("import org.junit.Test;\n");
-                
-                String objectName = (className.toLowerCase()).replace(".", "_");
-                
+                fw.write("import org.springframework.boot.test.context.SpringBootTest;\n");
+                fw.write("import org.springframework.test.context.junit4.SpringRunner;\n");
+                fw.write("import org.junit.runner.RunWith;\n");
+                fw.write("import org.mockito.InjectMocks;\n");
                 fw.write("\n");
-                fw.write("public class " + className.replace(".", "_") + "Test {\n"); // test class
+                fw.write("@RunWith(SpringRunner.class)\n");
+                fw.write("@SpringBootTest(classes=" + appName.substring(appName.lastIndexOf('.') + 1) + ".class)\n");
+                fw.write("public class " + cn + "Test {\n"); // test class
                 fw.write("\n");
-                fw.write("	private " + className + " " + objectName + ";\n"); // CUT object to be tested
+                fw.write("  @InjectMocks\n");
+                fw.write("	private " + cn + " " + cn.toLowerCase() + ";\n"); // CUT object to be tested
                 fw.write("\n");
                 fw.write("	@Before\n"); // setUp method annotation
                 fw.write("	public void setUp() throws Exception {\n"); // setUp method
-                fw.write("		" + objectName + " = new " + className + "();\n"); // create object for CUT
+                fw.write("		" + cn.toLowerCase() + " = new " + cn + "();\n"); // create object for CUT
                 fw.write("	}\n"); // setUp method end
                 // Create a test method for each sequence
                 int testIndex = 0;
@@ -74,7 +84,7 @@ public class TestFileBuilder {
                         }
                         else{ // normal method
                             producedTestCases.add(invokedMethod);
-                            fw.write("		" + objectName + "." + invokedMethod + ";\n"); // invoke a method in the sequence
+                            fw.write("		" + cn.toLowerCase() + "." + invokedMethod + ";\n"); // invoke a method in the sequence
                         }
                     }
                     fw.write("	}\n"); // end test method
